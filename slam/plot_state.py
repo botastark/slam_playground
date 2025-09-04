@@ -6,7 +6,7 @@ from slam.sensors import cast_ray
 LIDAR_CONFIG = {"fov_deg": 90, "n_beams": 30, "max_range": 5}
 
 
-def plot_state(maze, robot, grid, path=None, goal=None, lidar_cfg=None):
+def plot_state(maze, robot, grid, path=None, goal=None, frontiers=None, lidar_cfg=None):
     if lidar_cfg is None:
         lidar_cfg = LIDAR_CONFIG
     fov = math.radians(lidar_cfg["fov_deg"])
@@ -35,8 +35,11 @@ def plot_state(maze, robot, grid, path=None, goal=None, lidar_cfg=None):
     if goal is not None:
         plt.plot(goal[0], goal[1], "gx")
 
-    # lidar rays
-
+    # Frontiers
+    if frontiers:
+        fx, fy = zip(*frontiers)
+        plt.scatter(fx, fy, c="orange", s=100, marker="o", label="Frontiers")
+    plt.legend(loc="upper right")
     plt.title("Ground Truth")
 
     # --- occupancy grid ---
@@ -61,4 +64,4 @@ def plot_state(maze, robot, grid, path=None, goal=None, lidar_cfg=None):
 
     plt.title("Estimated Occupancy Map")
 
-    plt.pause(1)
+    plt.pause(0.5)
