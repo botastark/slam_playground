@@ -1,45 +1,12 @@
 import matplotlib.pyplot as plt
 from slam.gridmap import OccupancyGrid
 from slam.sensors import inverse_sensor_model, sense_and_update, cast_ray
-from slam.robot import Robot
+from slam.robot import Robot, heading_label
 from slam.maze import create_maze
 from slam.astar import astar
 import numpy as np
 import math
 
-def heading_label(theta):
-    """Return N/E/S/W string for given angle in radians."""
-    deg = int(round(math.degrees(theta)))
-    mapping = {0:"E", 90:"S", 180:"W", -180:"W", -90:"N"}
-    nearest = min(mapping.keys(), key=lambda k: abs(k-deg))
-    return mapping[nearest]
-
-def follow_path(robot, next_pose, maze):
-    (nx, ny) = next_pose
-    cx, cy, ct = robot.pose()
-
-    dx, dy = nx - cx, ny - cy
-
-    # Map dx,dy to desired heading
-    if dx == 1 and dy == 0:   desired_theta = 0            # east
-    elif dx == -1 and dy == 0: desired_theta = math.pi     # west
-    elif dx == 0 and dy == -1: desired_theta = -math.pi/2  # south
-    elif dx == 0 and dy == 1:  desired_theta = math.pi/2   # north
-    else:
-        print(f"Invalid step from {(cx,cy)} → {(nx,ny)}")
-        return
-    # Rotate in 90° increments until heading matches
-    while round(robot.theta, 3) != round(desired_theta, 3):
-        # difference in degrees
-        diff = (desired_theta - robot.theta + math.pi) % (2*math.pi) - math.pi
-        if diff > 0:
-            robot.rotate(90)
-        else:
-            robot.rotate(-90)
-
-    # Now move forward
-    robot.move_forward(maze)
-    print(f"At {robot.pose()} heading {heading_label(robot.theta)}")
 
 def run_demo():
     maze = create_maze()
@@ -57,7 +24,7 @@ def run_demo():
 
 
     for next_pose in path[1:]:
-        follow_path(robot, next_pose, maze)
+        robot.follow_path(next_pose, maze)
 
         # Draw
         plt.imshow(maze, cmap="gray_r", origin="upper")
