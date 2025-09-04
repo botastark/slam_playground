@@ -10,7 +10,7 @@ A minimal educational repo to understand **occupancy grids** and **mapping** bef
 
 ## Usage
 ```bash
-git clone https://github.com/yourusername/slam-playground.git
+git clone https://github.com/botastark/slam-playground.git
 cd slam-playground
 pip install -r requirements.txt
 python -m slam_playground.simulate

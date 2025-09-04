@@ -1,9 +1,11 @@
 import heapq
 import numpy as np
 
+
 def heuristic(a, b):
     """Manhattan distance."""
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
 
 def astar(occupancy_grid, start, goal, occ_threshold=0.6):
     """
@@ -14,6 +16,8 @@ def astar(occupancy_grid, start, goal, occ_threshold=0.6):
     """
     width, height = occupancy_grid.shape[1], occupancy_grid.shape[0]
     start, goal = tuple(start), tuple(goal)
+    # print("Start cell prob:", occupancy_grid[start[1], start[0]])
+    # print("Goal cell prob:", occupancy_grid[goal[1], goal[0]])
 
     # closed set & open list
     close_set = set()
@@ -36,13 +40,16 @@ def astar(occupancy_grid, start, goal, occ_threshold=0.6):
         close_set.add(current)
         cx, cy = current
 
-        for dx, dy in [(1,0), (-1,0), (0,1), (0,-1)]:
-            neighbor = (cx+dx, cy+dy)
+        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            neighbor = (cx + dx, cy + dy)
             x, y = neighbor
             if x < 0 or y < 0 or x >= width or y >= height:
                 continue
             if occupancy_grid[y, x] >= occ_threshold:  # treat as blocked
+                # print(f"Blocked cell {neighbor} prob={occupancy_grid[y,x]:.2f}")
                 continue
+            # else:
+            # print(f"Free cell {neighbor} prob={occupancy_grid[y,x]:.2f}")
 
             tentative_g = gscore[current] + 1
             if tentative_g < gscore.get(neighbor, 1e9):
