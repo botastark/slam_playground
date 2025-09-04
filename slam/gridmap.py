@@ -10,7 +10,8 @@ class OccupancyGrid:
 
     def prob_map(self):
         """Convert log-odds to probability map."""
-        return 1 - 1 / (1 + np.exp(self.log_odds))
+        p = 1 - 1 / (1 + np.exp(self.log_odds))
+        return 1 - p   # invert
 
     def update(self, updates):
         """

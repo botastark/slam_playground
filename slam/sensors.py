@@ -21,36 +21,64 @@ def bresenham(x0, y0, x1, y1):
             y0 += sy
     return points
 
-def cast_ray(maze, robot, angle, max_range=10):
-    """Cast a ray at given angle until hitting wall or max range."""
+def cast_ray(maze, robot, angle, max_range=10, step_size=0.05):
+    """
+    Ray marching until hitting wall or max range.
+    Returns free cells and the first occupied cell.
+    """
     x, y, theta = robot
     dx, dy = math.cos(theta+angle), math.sin(theta+angle)
-    for r in range(1, max_range+1):
-        xi, yi = int(round(x + r*dx)), int(round(y + r*dy))
-        if maze[yi, xi] == 1:   # hit wall
-            return (xi, yi)
-    return (xi, yi)
+
+    free_cells = []
+    visited = set()
+    r = 0.0
+    while r < max_range:
+        r += step_size
+        xi = int(round(x + r*math.cos(theta+angle)))
+        yi = int(round(y - r*math.sin(theta+angle)))  # note the minus here
+
+
+        if yi < 0 or yi >= maze.shape[0] or xi < 0 or xi >= maze.shape[1]:
+            return free_cells, None
+
+        if (xi, yi) in visited:
+            continue
+        visited.add((xi, yi))
+
+        if maze[yi, xi] == 1:  # wall hit
+            return free_cells, (xi, yi)
+
+        free_cells.append((xi, yi))
+
+    return free_cells, None
+
 
 def inverse_sensor_model(robot, endpoint):
-    """
-    Ray-casting: free cells along the ray, occupied at endpoint.
-    Returns updates = [(y,x,val), ...]
-    """
     (x0, y0, _) = robot
     (x1, y1) = endpoint
-    points = bresenham(x0, y0, x1, y1)
+    pts = bresenham(int(x0), int(y0), x1, y1)
 
-    updates = [(y, x, -1) for (x, y) in points[:-1]]  # free
-    updates.append((y1, x1, +1))                      # occupied
+    updates = []
+    # Mark free cells until but not including the last
+    for (x, y) in pts[:-1]:
+        updates.append((y, x, -1))  # free
+    # Last cell = occupied (wall hit)
+    updates.append((y1, x1, +1))
     return updates
 
-def sense_and_update(maze, robot, log_odds, fov_deg=90, n_beams=9, max_range=10):
-    """Simulate lidar with limited field of view."""
+
+def sense_and_update(maze, robot, grid, fov_deg=90, n_beams=9, max_range=10):
+    import numpy as np, math
+    x, y, theta = robot
+
     fov = math.radians(fov_deg)
-    angles = [a for a in 
-              list(np.linspace(-fov/2, fov/2, n_beams))]
+    angles = np.linspace(-fov/2, fov/2, n_beams)
+
     for ang in angles:
-        endpoint = cast_ray(maze, robot, ang, max_range)
-        for (y, x, val) in inverse_sensor_model(robot, endpoint):
-            log_odds[y, x] += val
-    return log_odds
+        free_cells, occ_cell = cast_ray(maze, (x, y, theta), ang, max_range)
+
+        for (xi, yi) in free_cells:
+            grid.log_odds[yi, xi] += -1
+        if occ_cell is not None:
+            xi, yi = occ_cell
+            grid.log_odds[yi, xi] += +1
