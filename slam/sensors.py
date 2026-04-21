@@ -23,16 +23,21 @@ def bresenham(x0, y0, x1, y1):
     return points
 
 
-def cast_ray(maze, robot_pose, angle, max_range=10, step_size=0.1):
+def cast_ray(maze, robot_pose, angle, max_range=10, step_size=1.0):
     x, y, theta = robot_pose
     dx, dy = math.cos(angle), math.sin(angle)
 
     free_cells = []
+    last_cell = None
     r = 0.0
     while r < max_range:
         r += step_size
         xi = int(round(x + r * dx))
         yi = int(round(y + r * dy))
+
+        if last_cell == (xi, yi):
+            continue
+        last_cell = (xi, yi)
 
         if yi < 0 or yi >= maze.shape[0] or xi < 0 or xi >= maze.shape[1]:
             return free_cells, None
@@ -60,6 +65,7 @@ def sense_and_update(maze, robot, grid, **LIDAR_CONFIG):
     fov_deg = LIDAR_CONFIG.get("fov_deg", 90)
     n_beams = LIDAR_CONFIG.get("n_beams", 15)
     max_range = LIDAR_CONFIG.get("max_range", 10)
+    step_size = LIDAR_CONFIG.get("step_size", 1.0)
 
     x, y, theta = robot
 
@@ -68,7 +74,9 @@ def sense_and_update(maze, robot, grid, **LIDAR_CONFIG):
 
     for rel in rel_angles:
         ang = theta + rel
-        free_cells, occ_cell = cast_ray(maze, (x, y, theta), ang, max_range)
+        free_cells, occ_cell = cast_ray(
+            maze, (x, y, theta), ang, max_range=max_range, step_size=step_size
+        )
 
         for xi, yi in free_cells:
             grid.log_odds[yi, xi] += -1

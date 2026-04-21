@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 
 
 def create_simple_maze():
@@ -20,7 +20,6 @@ def create_simple_maze():
     return maze
 
 
-import numpy as np
 import random
 
 
@@ -68,3 +67,16 @@ def create_maze(width=30, height=30, complexity=0.75, density=0.75):
                     maze[y_ + (y - y_) // 2, x_ + (x - x_) // 2] = 0
                     x, y = x_, y_
     return maze
+
+
+def resample_maze(maze, granularity=1):
+    """
+    Upsample a maze by an integer factor.
+    - granularity=1 keeps the original maze unchanged.
+    - granularity>1 repeats each maze cell into a granularity x granularity block.
+    """
+    if granularity < 1:
+        raise ValueError("granularity must be >= 1")
+    if granularity == 1:
+        return maze
+    return np.repeat(np.repeat(maze, granularity, axis=0), granularity, axis=1)
